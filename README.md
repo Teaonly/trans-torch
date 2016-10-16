@@ -5,8 +5,8 @@ Translating Torch model to other framework such as Caffe, MxNet ...
 Torch is excelent learning&research platform for deep learning, but its model can't be easy deployed without Luajit host. 
 This tool is a simple solution to this problem, translating Torch model to other easy deployed platform such as Caffe or Mxnet. 
 
-Directly translating Torch to Caffe (or others) is hard , we must Torch code to another DLS(like Caffe's prototxt) or python code(like Mxnet, Tensorflow)
-But translating parameters ( weights and bias) only between diffrent frmamework is an easy task. For most model in zoo, we need only translating follow modules or layers:
+Directly translating Torch to Caffe (or others) is hard , we must convert Torch code to another DSL (like Caffe's prototxt) or python code(like Mxnet, Tensorflow)
+But translating parameters ( weights and bias) only between diffrent frmamework is an easy task. For most models in zoo, we need only translating follow modules or layers:
 
 * Linear module's weight and bias
 * Convolution module's weight and bias
