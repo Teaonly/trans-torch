@@ -2,16 +2,16 @@ local ffi = require('ffi')
 local C = transTorch._C
 
 local toLinear = function(tm, caffeNet, layerName) 
-    assert(tm.weight:type() == 'torch.FloatTensor')
+    --assert(tm.weight:type() == 'torch.FloatTensor')
     local weight = tm.weight:cdata()
     local bias = tm.bias:cdata()
     C.writeCaffeLinearLayer(caffeNet[0], layerName, weight, bias)
 end
 
 local toConv = function(tm, caffeNet, layerName)
-    assert(tm.weight:type() == 'torch.FloatTensor')
-    local weights = tm.weight:cdata()
-    local bias = tm.bias:cdata()
+    --assert(tm.weight:type() == 'torch.FloatTensor')
+    local weights = tm.weight:float():cdata()
+    local bias = tm.bias:float():cdata()
     C.writeCaffeConvLayer(caffeNet[0], layerName, weights, bias)
 end
 
@@ -19,16 +19,16 @@ local toBatchNorm = function(tm, caffeNet, layerName)
     if ( tm.affine == true) then
         assert(type(layerName) == 'table')
         assert(#layerName == 2)
-        local weights = tm.weight:cdata()
-        local bias = tm.bias:cdata()
-        local mean = tm.running_mean:cdata()
-        local var = tm.running_var:cdata()
+        local weights = tm.weight:float():cdata()
+        local bias = tm.bias:float():cdata()
+        local mean = tm.running_mean:float():cdata()
+        local var = tm.running_var:float():cdata()
         C.writeCaffeBNLayer(caffeNet[0], layerName[1], mean, var);
         C.writeCaffeScaleLayer(caffeNet[0], layerName[2], weights, bias);
     else
         assert(type(layerName) == 'string')
-        local mean = tm.running_mean:cdata()
-        local var = tm.running_var:cdata()
+        local mean = tm.running_mean:float():cdata()
+        local var = tm.running_var:float():cdata()
         C.writeCaffeBNLayer(caffeNet[0], layerName[0], mean, var);
     end
 end
