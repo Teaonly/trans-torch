@@ -27,7 +27,7 @@ def ResBlock(net, from_layer, blockName, channel_in, channel_out, layerNumber, r
                                 stride = stride,
                                 pad = 1)
         bnName = '{}_L{}_bn1'.format(blockName, i)
-        net[bnName] = L.BatchNorm(net[convName], in_place=True)
+        net[bnName] = L.BatchNorm(net[convName], in_place=False)
         scaleName = '{}_L{}_scale1'.format(blockName, i)
         net[scaleName] = L.Scale(net[bnName], in_place=True, **scale_args)
         reluName = '{}_L{}_relu1'.format(blockName, i)
@@ -77,33 +77,34 @@ def ResNet34Body(net, from_layer):
     net.bn1 = L.BatchNorm(net.conv1, in_place=True)
     net.scale1 = L.Scale(net.bn1, in_place=True, **scale_args)
     net.relu1 = L.ReLU(net.scale1, in_place=True)
-    net.pool1 = L.Pooling(net.conv1, pool=P.Pooling.MAX, kernel_size=3, stride=2, pad=1)
+    net.pool1 = L.Pooling(net.conv1, pool=P.Pooling.MAX, kernel_size=3, stride=2, pad=0)
 
     ## 4 blocks
-    last_layer = ResBlock(net, 'pool1', 'resa', 64, 64, 2, False);
+    last_layer = ResBlock(net, 'pool1', 'resa', 64, 64, 3, False);
     last_layer = ResBlock(net, last_layer, 'resb', 64, 128, 4, True);
     last_layer = ResBlock(net, last_layer, 'resc', 128, 256, 6, True);
     last_layer = ResBlock(net, last_layer, 'resd', 256, 512, 3, True);
 
-    return net
+    return last_layer
 
 model_name = "resnet34"
 input_param = {'shape' : {
                 'dim' :[1,3,224,224]
               }};
 
-
 # Create train net.
 net = caffe.NetSpec()
 net.data = L.Input(input_param = input_param)
 
-ResNet34Body(net, from_layer='data')
+last_layer = ResNet34Body(net, from_layer='data')
+
+net.pool5 = L.Pooling(net[last_layer], pool=P.Pooling.AVE, kernel_size=7, stride=1, pad=0)
+net.fc1000 = L.InnerProduct(net.pool5, num_output=1000)
+net.prob = L.Softmax(net.fc1000)
 
 train_net_file = 'resnet-34.prototxt'
 with open(train_net_file, 'w') as f:
     print('name: "{}"'.format(model_name), file=f)
     print(net.to_proto(), file=f)
-sys.exit()
-
 
 

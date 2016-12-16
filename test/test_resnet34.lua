@@ -9,6 +9,36 @@ torch.setdefaulttensortype('torch.FloatTensor')
 local torchNet = torch.load('./resnet-34.t7')
 local caffeNet = transTorch.loadCaffe('./resnet-34.prototxt');
 
+torchNet:add(nn.SoftMax())
+torchNet:evaluate()
+torchNet:cuda()
+
+local x = torch.ones(1, 3, 224, 224) * 0.5
+local xx = x:cuda()
+local output = torchNet:forward(xx)
+
+print(output)
+
+--[[
+local subNet = nn.Sequential()
+subNet:add(torchNet:get(1))
+subNet:add(torchNet:get(2))
+subNet:add(torchNet:get(3))
+subNet:add(torchNet:get(4))
+subNet:add(torchNet:get(5))
+subNet:add(torchNet:get(6))
+subNet:add(torchNet:get(7))
+subNet:add(torchNet:get(8))
+
+local x = torch.ones(1, 3, 224, 224) * 0.5
+local xx = x:cuda()
+subNet:evaluate()
+subNet:cuda()
+local output = subNet:forward(xx)
+print(output)
+print(output:sum())
+--]]
+
 -- entry
 local conv = torchNet:get(1)
 transTorch.toCaffe(conv, caffeNet, 'conv1')
@@ -16,7 +46,7 @@ local bn = torchNet:get(2)
 transTorch.toCaffe(bn, caffeNet, {'bn1', 'scale1'})
 
 -- block a
-for i = 1, 2 do
+for i = 1, 3 do
     conv = torchNet:get(5):get(i):get(1):get(1):get(1)
     transTorch.toCaffe(conv, caffeNet, 'resa_L' .. i .. '_conv1')
 
@@ -97,4 +127,9 @@ end
 conv = torchNet:get(8):get(1):get(1):get(2)
 transTorch.toCaffe(conv, caffeNet, 'resd_L1_branch_conv1')
 
+--output
+local fc = torchNet:get(11):float()
+transTorch.toCaffe(fc, caffeNet, "fc1000")
+
 transTorch.writeCaffe(caffeNet, "resnet-34.caffemodel")
+
